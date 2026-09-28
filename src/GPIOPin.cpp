@@ -3,7 +3,7 @@
 //
 
 
-#include "../GPIOPin.h"
+#include "../incl/GPIOPin.h"
 #include "hardware/gpio.h"
 
 uint32_t GPIOPin::pins_in_use = 0;

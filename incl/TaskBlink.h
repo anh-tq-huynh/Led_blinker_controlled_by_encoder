@@ -4,27 +4,39 @@
 
 #ifndef LAB3_2_TASKBLINK_H
 #define LAB3_2_TASKBLINK_H
+#include "FreeRTOS.h"
 #include "LED.h"
-
+#include "task.h"
 
 
 class TaskBlink
 {
 	public:
-	TaskBlink(int led, int frequency): led(led), frequency(frequency){};
+		TaskBlink(LED &leds): leds(leds)
+		{
+			xTaskCreate(
+				blinker,
+				"Blinker",
+				512,
+				(void * )this,
+				tskIDLE_PRIORITY + 1,
+				&handle);
+		};
+		void blink();
 
-	void blink();
-	void increase_freq();
-	void decrease_freq();
-	void turn_on();
-	void turn_off();
-private:
-		LED led;
-		bool is_on = false;
-		bool period_needs_update = false;
-		int frequency;
-		int period = 1 * 1000 / frequency;  //convert to ms
-		int countdown = period;
+	private:
+		LED &leds;
+		int led_half_period = leds.get_period()/ 2;
+		int prev_led_half_period = led_half_period;
+		int countdown = led_half_period;
+
+
+		static void blinker (void* param)
+		{
+			auto *instance = static_cast<TaskBlink*> (param);
+			instance -> blink();
+		}
+		TaskHandle_t handle;
 
 };
 

@@ -6,19 +6,40 @@
 #define LAB3_2_TASKEVENTHANDLER_H
 #include "queue.h"
 #include "Encoder.h"
+#include "LED.h"
 
 
 class TaskEventHandler
 {
 	public:
-	TaskEventHandler(int rot_w, int rot_a, int rot_b, QueueHandle_t queue)
+	TaskEventHandler(LED &leds, QueueHandle_t queue)
 		:
 		queue(queue),
-		encoder(rot_w, rot_a, rot_b, queue){};
+		leds(leds)
+	{
+		xTaskCreate(
+			event_handler,
+			"Event handler",
+			512,
+			(void *) this,
+			tskIDLE_PRIORITY +1,
+			&handle);
+	};
+
+		void event_handle();
+		void update() const;
+
 	private:
 		QueueHandle_t queue;
-		Encoder encoder;
-
+		LED &leds;
+		int receive_input;
+		BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
+		static void event_handler (void *param)
+		{
+			auto *instance = static_cast<TaskEventHandler*>(param);
+			instance ->event_handle();
+		}
+		TaskHandle_t handle;
 };
 
 

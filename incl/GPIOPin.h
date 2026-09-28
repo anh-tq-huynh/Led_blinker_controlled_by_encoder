@@ -17,6 +17,10 @@ class GPIOPin
 		bool read() const;
 		void write(bool value) const;
 		explicit operator bool() const;
+		int get_pin() const
+		{
+			return pin;
+		}
 	private:
 		bool is_dormant;
 		bool is_input;

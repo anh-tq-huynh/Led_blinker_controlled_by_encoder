@@ -2,41 +2,35 @@
 // Created by Anh Huynh on 13.9.2026.
 //
 
-#include "../Encoder.h"
+#include "../incl/Encoder.h"
 
-void Encoder::irq_handler(uint gpio, uint32_t event_mask) const
+void Encoder::irq_rotate_handler(uint gpio, uint32_t event_mask)
 {
-	BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
 	if (gpio == rot_a.get_pin())
 	{
+		BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
 		if (!rot_b.read())
 		{
-			xQueueSendFromISR(queue, &clockwise , &pxHigherPriorityTaskWoken);
+			xQueueSendFromISR(queue, &clockwise ,&pxHigherPriorityTaskWoken);
+			portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
 		}
 		else
 		{
 			xQueueSendFromISR(queue, &anticlockwise, &pxHigherPriorityTaskWoken);
+			portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
 		}
 	}
-}
-
-bool Encoder::is_pressed()
-{
-	bool current_btn_state = rot_sw.read();
-	TickType_t now = xTaskGetTickCount();
-
-	if (current_btn_state != last_btn_state)
+	if (gpio == rot_sw.get_pin())
 	{
-		if (now - last_press_time >= pdMS_TO_TICKS(250))
+		TickType_t now = xTaskGetTickCountFromISR();
+		BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
+
+		if ( (now - last_press_time) >= pdMS_TO_TICKS(250))
 		{
 			last_press_time = now;
-			last_btn_state = true;
-			return true;
+			xQueueSendFromISR(queue, &pressed, &pxHigherPriorityTaskWoken);
+			portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
 		}
 	}
-	if (!current_btn_state)
-	{
-		last_btn_state = false;
-	}
-	return false;
 }
+

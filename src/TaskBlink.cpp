@@ -13,56 +13,21 @@ void TaskBlink::blink()
 {
 	while (true)
 	{
-		if (is_on)
+		if (leds.is_enabled())
 		{
-			if (countdown > 0)
-			{
-				countdown -= 10;
-			}
-			else
-			{
-				led.toggle_led();
-				countdown = led.get_period();
-			}
+			led_half_period = leds.get_period() / 2;
+			leds.toggle_leds();
+			vTaskDelay(pdMS_TO_TICKS(led_half_period));
 		}
 		else
 		{
-			led.led_off();
+			leds.leds_off();
 		}
-		vTaskDelay(pdMS_TO_TICKS(10));
+		vTaskDelay(pdMS_TO_TICKS(1));
 	}
 
 }
 
-void TaskBlink::increase_freq()
-{
-	int increment = 20;
-	if (frequency + increment <= MAX_FREQ)
-	{
-		frequency += increment;
-		period = 1 * 1000 / frequency;  //convert to ms
-	}
-}
-
-void TaskBlink::decrease_freq()
-{
-	int decrement = 20;
-	if (frequency - decrement >= MIN_FREQ)
-	{
-		frequency -= decrement;
-		period = 1 * 1000 / frequency;  //convert to ms
-	}
-}
-
-void TaskBlink::turn_on()
-{
-	is_on = true;
-}
-
-void TaskBlink::turn_off()
-{
-	is_on = false;
-}
 
 
 
